@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import './App.css';
 
 import {
   BrowserRouter as Router,
@@ -11,11 +10,16 @@ import { userContext } from './components/User';
 import { Header } from './components/Header';
 import { History } from "./utils";
 
+import { Loader } from './components/Loader';
 import { Profile } from './components/Profile';
 import { Repos } from './components/Repos';
 import { Gists } from './components/Gists';
 import { PrivateRoute } from './utils/PrivateRoute';
 import { Error404 } from './errorPages';
+
+import { ThemeProvider, CSSReset } from "@chakra-ui/core";
+import { CustomTheme } from "./theme";
+import Api from './services';
 
 class App extends Component {
   constructor(props) {
@@ -37,41 +41,53 @@ class App extends Component {
     History.push('/');
   }
 
-  login(user) {
-    const { profile, token } = user;
+  async login() {
+    const user = await Api.getUser();
     this.setState({
       isLogged: true,
       user: {
         isLogged: true,
-        profile,
-        token
+        isLoading: false,
+        profile: user,
+        token: localStorage.getItem('token')
       }
-    });
-    History.push('/');
+    }, () => History.push('/'));
+    
   }
 
   render() {
+    const token = localStorage.getItem('token');
+
     const value = {
       user: this.state.user,
       logoutUser: this.logout,
       loginUser: this.login,
-      isLogged: this.state.isLogged
+      isLogged: this.state.isLogged,
+      isLoading: this.state.isLoading
     };
 
-    return (
+    if (!this.state.isLogged && token) this.login();
+
+    const LoaderComp = () => <Loader />;
+    const AppComp = () => (
       <Router>
-        <div>
-          <userContext.Provider value={value}>
-            <Header />
-            <Switch>
-              <PrivateRoute path='/repos' component={Repos} />
-              <PrivateRoute path='/gists' component={Gists} />
-              <PrivateRoute path='/' component={Profile} />
-              <Route component={Error404} />
-            </Switch>
-          </userContext.Provider>
-        </div>
+        <userContext.Provider value={value}>
+          <Header />
+          <Switch>
+            <PrivateRoute path='/repos' component={Repos} />
+            <PrivateRoute path='/gists' component={Gists} />
+            <PrivateRoute path='/' component={Profile} />
+            <Route component={Error404} />
+          </Switch>
+        </userContext.Provider>
       </Router>
+    );
+
+    return (
+      <ThemeProvider theme={CustomTheme}>
+        <CSSReset />
+        {!this.state.isLogged && token ? <LoaderComp /> : <AppComp />}
+      </ThemeProvider>
     );
   }
 }

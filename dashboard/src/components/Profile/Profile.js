@@ -1,10 +1,11 @@
 import React from 'react';
 import { userContext } from '../User';
 import { format } from 'date-fns';
+import { Avatar } from '@chakra-ui/core';
 
 const Profile = (props) => {
   return (
-    <div className="header">
+    <div className="profile">
       <userContext.Consumer>
         {(value) => {
           const { 
@@ -23,11 +24,11 @@ const Profile = (props) => {
             followers,
             following,
             created_at
-          } = value.user.profile
+          } = value.user.profile;
           return (
             <div>
               <a href={html_url}>
-                <img src={avatar_url} alt={`${login}'s avatar`} style={{width: 100}}/>
+                <Avatar src={avatar_url} alt={`${login}'s avatar`} style={{width: 100}}/>
                 <div>{login}</div>
               </a>
               <div>
